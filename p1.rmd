@@ -1,0 +1,115 @@
+---
+title: "Project1"
+author: "Yaxue Guo"
+date: "9/23/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+## Project Requirements
+
+  * Choose four existing datasets in R;
+  
+  * Produce a figure for each dataset;
+  
+  * Use functions to filter, mutate or summarize;
+  
+  * Write a paragraph about each data set. Give context, describe patterns, conclusions you reached, and further questions you would ask;
+  
+  * Submit your code, and an R markdown blog post to Github.
+
+## Dataset - PlantGrowth 
+
+> This dataset contains results from an experiment to compare yields (as measured by dried  
+weight of plants) obtained under a control and two different treatment conditions. Since this 
+is a data frame of 30 cases and 2 variables, one continuous and one categorical, I use box plot to show it.
+    
+```{r}
+  ggplot(PlantGrowth, aes(x = group, y = weight)) +
+    geom_boxplot()
+```
+```{r}
+  PlantGrowth %>%
+    filter(weight > 5.5) %>%
+    group_by(group) %>%
+    summarise(n())
+  
+  PlantGrowth %>%
+    filter(weight < 4.5) %>%
+    group_by(group) %>%
+    summarise(n())
+```
+
+> From the plot, we can clearly see that compared to the control group, the median weight under treatment condition 1 is lower than the median of control group, and the median weight under treatment condition 2 is higher than the median of control group. Thus, we can make conclusion that treatment condition 1 can reduce the plant growth while treatment condition 2 can improve the plant growth. Also, extra attention could be paid to the two abnormal observations under treatment condition 1 and find out why these two plant got much higher weight than others in treatment condition 1, even than most(more than 3/4) in control condition and treatment condition 2. 
+
+> As a next step, it would be interesting to look closer on the weight distribution of each group given that the pattern of IQR, Q1, Q2 and Q3 for each group are obviously different.
+
+
+## Dataset - ToothGrowth
+
+> This is a data frame with 60 observations and 3 variables. The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid (a form of vitamin C and coded as VC)).
+
+```{r warning = FALSE, message= FALSE}
+  ggplot(ToothGrowth, aes(x = dose, y = len, color = supp)) + 
+    geom_smooth()
+
+  ToothGrowth %>%
+    filter(len > 20) %>%
+    group_by(supp) %>%
+    summarise(n())
+```
+> There are two categorical variabls(supp and dose), and one continuous varible(len) in this dataset. However, even though dose is only categorized into 3 levels in this case, it still can be considered as a continuous variable given its nature, so I chose geom_smooth() to visualize it. From the plot, we can see the tooth growth with supplementation in the form OJ (orange juice) works better than from VC. Also, we can see a positive relationship between tooth growth and the dose of vitamin C, no matter in which supp format. And the impact of dose on len becomes weaker as the dose increases. So we can make conclusion that OJ is more efficient than VC for tooth growth; increasing dose can help tooth growth; the effect of increasing dose decreases.
+
+> For further analysis, I think linear regression model can be used to analyze the relationship between len and dose and find the optimal dose for tooth growth.
+
+## Dataset - HairEyeColor 
+
+> This data set shows the distribution of hair and eye color and sex in 592 statistics students. The format is a 3-dimensional array resulting from cross-tabulating 592 observations on 3 variables. The first variable is	Hair with four categories: Black, Brown, Red, Blond. The second variable is Eye with Brown, Blue, Hazel, Green. The third variable is Sex including Male and Female. To use ggplot on this data set, we need first convert it to a data frame.
+
+```{r}
+  # Convert to data frame. 
+  df <- as.data.frame.table(HairEyeColor)
+
+  # Use geom_jitter to reduce overlapping issue.
+  ggplot(df, aes(x = Hair, y = Eye, color = Sex, size = Freq)) +
+    geom_jitter(width = .2, height = .2)
+  
+  df2 <- df %>%
+    filter(Hair %in% c("Black","Brown","Red","Blond"), Eye %in% c("Brown","Blue","Hazel","Green")) %>%
+    mutate(sex_prop = Freq / sum(Freq))
+  
+  # Show comparison between Sex.
+  ggplot(df2, aes(x= Sex, y = sex_prop, color = Hair, shape = Eye)) +
+    geom_point() +
+    coord_flip() 
+```
+
+> From the scatter plot we can clearly see there are patterns underlying the dataset. We used size to show Frequency of a certian condition, and the sizes for Male and Female are quite similar for each case, which we can conclude that the effect of sex on eye color and hair color combination is small. Also, we can see that Brown-eye vs Black-hair, Brown-eye vs Brown-hair, Blue-eye vs Brown-hair, Blue-eye vs Blond-hair are the four most common combination, while Green-eye vs Black-hair, Brown-eye vs Blond-hair are the least common. 
+
+> For further question, I am curious about the distribution of proportion for each eye-hair combination in two sex groups. We have known they are mostly similar, but where the difference lies and the underlying biological reasons would be interesting to explore.
+
+## Dataset - iris
+
+> iris is a data frame with 150 cases (rows) and 5 variables (columns) named Sepal.Length, Sepal.Width, Petal.Length, Petal.Width, and Species. This famous (Fisher's or Anderson's) iris data set gives the measurements in centimeters of the variables sepal length and width and petal length and width, respectively, for 50 flowers from each of 3 species of iris. The species are Iris setosa, versicolor, and virginica.
+
+```{r message=FALSE}
+  ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+    geom_smooth()
+
+  ggplot(iris, aes(x = Petal.Length, y = Petal.Width, color = Species)) +
+    geom_smooth()
+  
+  iris %>%
+    group_by(Species) %>%
+    summarise(mean(Sepal.Width), mean(Sepal.Length), mean(Petal.Width), mean(Petal.Length))
+    
+```
+
+> From the two graphs, we can see positive relationship between width and length of sepal, and between width and length of petal. Also, for different species marked by different colors, the range of sepal and petal size also vary from species to species. For example, from graph 2 we can clearly see that setosa has a much smaller petal size than versicolor and virginica. By the summarise function, we got mean width and length of sepal and petal for three species and compared them. As a whole, setosa has the smallest petal and widest sepal; virginica has the largest petal and longest sepal.
+
+> For further analysis, I think it is a good point to analyze the reletionship between sepal/petal width and length for different species and build linear regression models or classification models. Then if given an iris's partial data, if missing one width or length we can still get an estimate; if missing the species we can use other length and width data to classify it.
